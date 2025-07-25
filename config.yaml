@@ -1,32 +1,26 @@
-# YOLOv8 训练工作流配置
 yolo_pipeline:
-  raw_data_dir: "raw_yolo_data"
-  classes_file: "yolo_class_names.txt"
-  class_names: ["frostbolt_ready", "frostbolt_cooldown", "icelance_ready", "icelance_cooldown", "frozenorb_ready", "frozenorb_cooldown"]
-
-# YOLOv8 训练参数
+  raw_data_dir: raw_yolo_data
+  classes_file: yolo_class_names.txt
+  class_names:
+  - frostbolt_ready
+  - frostbolt_cooldown
+  - icelance_ready
+  - icelance_cooldown
+  - frozenorb_ready
+  - frozenorb_cooldown
 yolo_training:
-  output_dir: "yolo_dataset"
+  output_dir: yolo_dataset
   split_ratio: 0.8
   epochs: 50
-  model: "yolov8n.pt"
+  model: yolov8n.pt
   imgsz: 640
-
-# YOLO模型配置
-yolo_model_path: "runs/detect/train/weights/best.pt"
-screen_capture_region: null # 截图区域 [x1, y1, x2, y2], null代表全屏
-
-# 按键模拟器配置
+yolo_model_path: runs/detect/train/weights/best.pt
+screen_capture_region: null
 keystroke_sender:
   type: pynput
   keypress_delay_ms: 50
-
-# 当前使用的策略文件
-current_strategy: "strategies/frostfire_mage.yaml"
-
-# 模式切换键配置
+current_strategy: strategies/frostfire_mage.yaml
 mode_switch_keys:
-  aoe_mode: "f1"              # AOE模式切换键
-  single_target_mode: "f2"    # 单体模式切换键
-  stop_casting: "f3"          # 停止释放技能键
-
+  aoe_mode: f1
+  single_target_mode: f2
+  stop_casting: f3

@@ -1,39 +1,87 @@
 import time
 import yaml
 import os
-from threading import Thread, Event
+from multiprocessing import Process, Event
 from pynput import keyboard
 
 from src.keybinder import get_keystroke_sender
 from src.yolo_detector import YoloDetector
 
-class AutomationEngine(Thread):
+class AutomationEngine(Process):
+    # ... (The rest of the class remains largely the same, only the base class changes)
     # 模式常量
     MODE_AOE = "aoe"
     MODE_SINGLE = "single_target"
     MODE_STOP = None
 
-    def __init__(self, config_path, log_queue):
+    def __init__(self, config_path, log_queue, yolo_data_queue, command_queue, debug_mode):
         super().__init__()
         self.config_path = config_path
         self.log_queue = log_queue
+        self.yolo_data_queue = yolo_data_queue
+        self.command_queue = command_queue
+        self.debug_mode = debug_mode
         self._stop_event = Event()
-        self.config = self._load_config()
 
-        # 初始化组件
+    def run(self):
+        # Config loading and component initialization must be inside the new process
+        self.config = self._load_config()
         self.yolo_detector = YoloDetector(self.config.get('yolo_model_path'))
         self.keystroke_sender = get_keystroke_sender(self.config)
         self.screen_region = self.config.get('screen_capture_region')
-
-        # 加载策略
         self.current_strategy = {}
         self.global_cooldown = 1.5
         self._load_initial_strategy()
-
-        # 模式切换
         self.current_mode = self.MODE_STOP
         self.listener = None
         self.mode_switch_keys = self.config.get('mode_switch_keys', {})
+
+        self.log("自动化引擎已启动")
+        self.start_listener()
+
+        while not self._stop_event.is_set():
+            if self.current_mode == self.MODE_STOP or not self.current_strategy:
+                time.sleep(0.1)
+                continue
+
+            try:
+                detected_objects = self.yolo_detector.detect_skills(self.screen_region)
+                ready_skills = {obj['name'].replace('_ready', '') for obj in detected_objects if obj['name'].endswith('_ready')}
+                all_detected_labels = [obj['name'] for obj in detected_objects]
+                self.yolo_data_queue.put(all_detected_labels)
+
+                if not ready_skills:
+                    time.sleep(0.1)
+                    continue
+
+                spell_to_cast, spell_keybind = self._find_spell_to_cast(ready_skills)
+
+                if spell_to_cast and spell_keybind:
+                    if self.debug_mode:
+                        self.log(f"[调试] 暂停，准备施放: {spell_to_cast} (按键: {spell_keybind})")
+                        self.log_queue.put({"type": "debug_step", "spell": spell_to_cast, "keybind": spell_keybind})
+                        
+                        command = self.command_queue.get()
+                        if command == 'execute':
+                            self.log("[调试] 指令: 执行")
+                            self.keystroke_sender.send_key(spell_keybind)
+                            time.sleep(self.global_cooldown)
+                        else:
+                            self.log("[调试] 指令: 跳过")
+                            time.sleep(0.1)
+                    else:
+                        self.log(f"模式: {self.current_mode.upper()} | 施放: {spell_to_cast}")
+                        self.keystroke_sender.send_key(spell_keybind)
+                        time.sleep(self.global_cooldown)
+                else:
+                    time.sleep(0.1)
+
+            except Exception as e:
+                self.log(f"引擎主循环发生错误: {e}")
+                time.sleep(1)
+
+        self.log("自动化引擎已停止")
+        self.stop_listener()
 
     def _load_config(self):
         try:
@@ -55,7 +103,6 @@ class AutomationEngine(Thread):
         self.load_strategy(strategy_path)
 
     def load_strategy(self, strategy_path):
-        """加载指定的策略文件"""
         try:
             with open(strategy_path, 'r', encoding='utf-8') as f:
                 self.current_strategy = yaml.safe_load(f)
@@ -72,11 +119,10 @@ class AutomationEngine(Thread):
         self.log_queue.put(message)
 
     def on_key_press(self, key):
-        """处理键盘按键事件，切换模式"""
         try:
             key_name = key.name.lower() if hasattr(key, 'name') else str(key).lower().replace("'", "")
         except AttributeError:
-            return # 忽略特殊按键
+            return
 
         key_to_mode = {v.lower(): k for k, v in self.mode_switch_keys.items()}
 
@@ -93,11 +139,9 @@ class AutomationEngine(Thread):
                 self.log("停止自动释放技能")
 
     def start_listener(self):
-        """启动键盘监听器"""
         if not self.mode_switch_keys:
             self.log("警告: 未在配置中找到模式切换按键。")
             return
-            
         self.listener = keyboard.Listener(on_press=self.on_key_press)
         self.listener.start()
         self.log("键盘监听器已启动")
@@ -130,39 +174,6 @@ class AutomationEngine(Thread):
                 keybind = bindings.get(spell['key'], spell['key'])
                 return spell_name, keybind
         return None, None
-
-    def run(self):
-        self.log("自动化引擎已启动")
-        self.start_listener()
-
-        while not self._stop_event.is_set():
-            if self.current_mode == self.MODE_STOP or not self.current_strategy:
-                time.sleep(0.1)
-                continue
-
-            try:
-                ready_skills = self._get_ready_skills()
-                if not ready_skills:
-                    time.sleep(0.1)
-                    continue
-
-                spell_to_cast, spell_keybind = self._find_spell_to_cast(ready_skills)
-
-                if spell_to_cast and spell_keybind:
-                    self.log(f"模式: {self.current_mode.upper()} | 准备施放: {spell_to_cast}")
-                    self.keystroke_sender.send_key(spell_keybind)
-                    self.log(f"==> 已施放: {spell_to_cast} (按键: {spell_keybind})")
-                    self.log(f"全局冷却开始 ({self.global_cooldown}s)...")
-                    time.sleep(self.global_cooldown)
-                else:
-                    time.sleep(0.1) # 无技能可放，短暂休眠
-
-            except Exception as e:
-                self.log(f"引擎主循环发生错误: {e}")
-                time.sleep(1)
-
-        self.log("自动化引擎已停止")
-        self.stop_listener()
 
     def stop(self):
         self._stop_event.set()
