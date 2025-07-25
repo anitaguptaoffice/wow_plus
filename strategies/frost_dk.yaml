@@ -1,0 +1,56 @@
+name: "Frost Death Knight"
+class: "Death Knight"
+spec: "Frost"
+description: "冰霜死亡骑士输出循环策略"
+global_cooldown: 1.5
+
+# 按键绑定配置
+bindings:
+  # 基础按键绑定
+  target: "tab"
+  interrupt: "f"
+  potion: "v"
+  
+  # 技能按键绑定
+  frost_strike: "1"
+  howling_blast: "2"
+  obliterate: "3"
+  frost_scythe: "4"
+  empower_rune_weapon: "5"
+  pillar_of_frost: "6"
+  breath_of_sindragosa: "7"
+  glacial_advance: "8"
+  horn_of_winter: "9"
+  chains_of_ice: "0"
+
+# AOE模式优先级
+aoe_priority:
+  - name: "frost_scythe"          # 冰霜镰刀
+    key: "frost_scythe"
+  - name: "howling_blast"         # 凛风冲击
+    key: "howling_blast"
+  - name: "glacial_advance"       # 冰川突进
+    key: "glacial_advance"
+  - name: "horn_of_winter"        # 冬日号角
+    key: "horn_of_winter"
+  - name: "obliterate"            # 屠戮
+    key: "obliterate"
+  - name: "frost_strike"          # 冰霜打击
+    key: "frost_strike"
+
+# 单体模式优先级
+single_target_priority:
+  - name: "pillar_of_frost"       # 霜之柱
+    key: "pillar_of_frost"
+  - name: "empower_rune_weapon"   # 强化符文武器
+    key: "empower_rune_weapon"
+  - name: "breath_of_sindragosa"  # 辛达苟萨之息
+    key: "breath_of_sindragosa"
+  - name: "obliterate"            # 屠戮
+    key: "obliterate"
+  - name: "howling_blast"         # 凛风冲击
+    key: "howling_blast"
+  - name: "frost_strike"          # 冰霜打击
+    key: "frost_strike"
+  - name: "chains_of_ice"         # 冰链
+    key: "chains_of_ice"

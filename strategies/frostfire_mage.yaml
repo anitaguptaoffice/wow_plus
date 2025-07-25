@@ -1,0 +1,76 @@
+name: "Frostfire Mage"
+class: "Mage"
+spec: "Frostfire"
+description: "霜火法师输出循环策略"
+global_cooldown: 1.5
+
+# 按键绑定配置
+bindings:
+  # 基础按键绑定
+  target: "tab"
+  interrupt: "f"
+  potion: "v"
+  
+  # 技能按键绑定
+  frostbolt: "1"
+  frozen_orb: "2"
+  ice_lance: "3"
+  comet_storm: "4"
+  blizzard: "5"
+  rune_of_power: "6"
+  cone_of_cold: "7"
+  frost_nova: "8"
+  ice_barrier: "9"
+  frostfire_bolt: "0"
+
+# AOE模式优先级
+aoe_priority:
+  - name: "cone_of_cold"          # 冰锥术
+    key: "cone_of_cold"
+  - name: "frozen_orb"            # 寒冰宝珠
+    key: "frozen_orb"
+  - name: "ice_lance"             # 冰枪术 (两层溢流寒霜)
+    key: "ice_lance"
+  - name: "ice_lance"             # 冰枪术 (溢流飞火且冰冻)
+    key: "ice_lance"
+  - name: "comet_storm"           # 彗星风暴
+    key: "comet_storm"
+  - name: "blizzard"              # 暴风雪
+    key: "blizzard"
+  - name: "rune_of_power"         # 幻能
+    key: "rune_of_power"
+  - name: "frostbolt"             # 冰风暴(冰川尖刺后)
+    key: "frostbolt"
+  - name: "frostbolt"             # 冰冻冰川尖刺
+    key: "frostbolt"
+  - name: "frost_nova"            # 溢流寒霜的冰风暴
+    key: "frost_nova"
+  - name: "frostfire_bolt"        # 冰冻冰枪
+    key: "frostfire_bolt"
+  - name: "ice_barrier"           # 冰川尖刺
+    key: "ice_barrier"
+  - name: "frostfire_bolt"        # 寒冰箭
+    key: "frostfire_bolt"
+
+# 单体模式优先级
+single_target_priority:
+  - name: "frostbolt"             # 寒冰箭/冰川尖刺后的冰风暴
+    key: "frostbolt"
+  - name: "frozen_orb"            # 寒冰宝珠
+    key: "frozen_orb"
+  - name: "ice_lance"             # 两层溢流寒霜的冰风暴
+    key: "ice_lance"
+  - name: "ice_lance"             # 溢流飞火且冰冻的冰枪
+    key: "ice_lance"
+  - name: "rune_of_power"         # 变易幻能
+    key: "rune_of_power"
+  - name: "frostbolt"             # 冰冻冰川尖刺
+    key: "frostbolt"
+  - name: "frost_nova"            # 溢流寒霜的冰风暴
+    key: "frost_nova"
+  - name: "ice_barrier"           # 冰川尖刺
+    key: "ice_barrier"
+  - name: "frostfire_bolt"        # 冰冻冰枪
+    key: "frostfire_bolt"
+  - name: "frostfire_bolt"        # 霜火箭
+    key: "frostfire_bolt"

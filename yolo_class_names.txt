@@ -1,0 +1,6 @@
+frostbolt_ready
+frostbolt_cooldown
+icelance_ready
+icelance_cooldown
+frozenorb_ready
+frozenorb_cooldown

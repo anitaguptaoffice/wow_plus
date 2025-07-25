@@ -1,0 +1,58 @@
+name: "Destruction Warlock"
+class: "Warlock"
+spec: "Destruction"
+description: "毁灭术士输出循环策略"
+global_cooldown: 1.5
+
+# 按键绑定配置
+bindings:
+  # 基础按键绑定
+  target: "tab"
+  interrupt: "f"
+  potion: "v"
+  
+  # 技能按键绑定
+  incinerate: "1"
+  chaos_bolt: "2"
+  conflagrate: "3"
+  shadowburn: "4"
+  immolate: "5"
+  rain_of_fire: "6"
+  cataclysm: "7"
+  havoc: "8"
+  soul_fire: "9"
+  dimensional_rift: "0"
+
+# AOE模式优先级
+aoe_priority:
+  - name: "rain_of_fire"          # 烈焰风暴
+    key: "rain_of_fire"
+  - name: "cataclysm"             # 天灾
+    key: "cataclysm"
+  - name: "immolate"              # 献祭
+    key: "immolate"
+  - name: "conflagrate"           # 燃烧
+    key: "conflagrate"
+  - name: "shadowburn"            # 暗影灼烧
+    key: "shadowburn"
+  - name: "dimensional_rift"       # 次元裂隙
+    key: "dimensional_rift"
+  - name: "incinerate"            # 烧尽
+    key: "incinerate"
+
+# 单体模式优先级
+single_target_priority:
+  - name: "havoc"                 # 浩劫
+    key: "havoc"
+  - name: "chaos_bolt"            # 混乱之箭
+    key: "chaos_bolt"
+  - name: "conflagrate"           # 燃烧
+    key: "conflagrate"
+  - name: "shadowburn"            # 暗影灼烧
+    key: "shadowburn"
+  - name: "soul_fire"             # 灵魂之火
+    key: "soul_fire"
+  - name: "dimensional_rift"       # 次元裂隙
+    key: "dimensional_rift"
+  - name: "incinerate"            # 烧尽
+    key: "incinerate"

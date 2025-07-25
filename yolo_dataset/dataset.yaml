@@ -1,0 +1,29 @@
+# YOLOv8 数据集配置文件
+
+# 数据集根目录
+path: /Users/allyin/tongyi/yolo_dataset
+train: images/train  # 训练图片目录 (相对于path)
+val: images/val    # 验证图片目录 (相对于path)
+
+# 类别定义
+names:
+  0: frostbolt_ready
+  1: frostbolt_cooldown
+  2: icelance_ready
+  3: icelance_cooldown
+  4: frozenorb_ready
+  5: frozenorb_cooldown
+  6: blizzard_ready
+  7: blizzard_cooldown
+  8: comet_storm_ready
+  9: comet_storm_cooldown
+  10: cone_of_cold_ready
+  11: cone_of_cold_cooldown
+  12: frost_nova_ready
+  13: frost_nova_cooldown
+  14: frostfire_bolt_ready
+  15: frostfire_bolt_cooldown
+  16: ice_barrier_ready
+  17: ice_barrier_cooldown
+  18: rune_of_power_ready
+  19: rune_of_power_cooldown
