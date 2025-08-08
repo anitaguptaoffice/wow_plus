@@ -1,7 +1,6 @@
 # gui.py (PySide6 Version)
 
 import os
-from multiprocessing import Queue
 import sys
 
 import yaml
@@ -26,7 +25,8 @@ from PySide6.QtWidgets import (
     QCheckBox,
 )
 
-from src.automation_engine import AutomationEngine
+from src.app_controller import AppController
+from src.utils.config_manager import ConfigManager
 
 
 class SkillWidget(QFrame):
@@ -118,16 +118,12 @@ class App(QMainWindow):
         self.setWindowTitle("《魔兽世界》技能自动化助手 (YOLO版)")
         self.setGeometry(100, 100, 1200, 700)
 
-        self.config_path = "config.yaml"
-        self.automation_process = None
-        self.log_queue = Queue()
-        self.yolo_data_queue = Queue()
-        self.command_queue = Queue()
+        self.config_manager = ConfigManager('config.yaml')
+        self.controller = AppController(self.config_manager.config_path)
         self.current_strategy_path = None
         self.current_strategy = {}
 
         self.setup_ui()
-        self.load_config()
         self.load_strategy_from_config()
         self.process_log_queue()
         self.process_yolo_data_queue()
@@ -223,14 +219,6 @@ class App(QMainWindow):
         control_layout.addWidget(self.mode_info_label)
         main_v_layout.addWidget(bottom_frame)
 
-    def load_config(self):
-        try:
-            with open(self.config_path, "r", encoding="utf-8") as f:
-                self.config = yaml.safe_load(f)
-        except Exception as e:
-            QMessageBox.critical(self, "错误", f"加载配置文件失败: {e}")
-            self.config = {}
-
     def browse_strategy(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "选择策略文件", "strategies", "YAML files (*.yaml *.yml)")
         if file_path:
@@ -244,7 +232,7 @@ class App(QMainWindow):
             QMessageBox.critical(self, "错误", "策略文件不存在")
 
     def load_strategy_from_config(self):
-        strategy_path = self.config.get("current_strategy", "strategies/frostfire_mage.yaml")
+        strategy_path = self.config_manager.get("current_strategy", "strategies/frostfire_mage.yaml")
         if strategy_path and os.path.exists(strategy_path):
             self.strategy_path_entry.setText(strategy_path)
             self.load_strategy_file(strategy_path)
@@ -270,7 +258,7 @@ class App(QMainWindow):
             self.current_strategy = {}
 
     def update_strategy_info(self):
-        mode_keys = self.config.get("mode_switch_keys", {})
+        mode_keys = self.config_manager.get("mode_switch_keys", {})
         aoe_key = mode_keys.get("aoe_mode", "N/A").upper()
         single_key = mode_keys.get("single_target_mode", "N/A").upper()
         stop_key = mode_keys.get("stop_casting", "N/A").upper()
@@ -294,9 +282,8 @@ class App(QMainWindow):
             with open(save_path, "w", encoding="utf-8") as f:
                 yaml.dump(self.current_strategy, f, allow_unicode=True, sort_keys=False)
 
-            self.config["current_strategy"] = save_path
-            with open(self.config_path, "w", encoding="utf-8") as f:
-                yaml.dump(self.config, f, allow_unicode=True, sort_keys=False)
+            self.config_manager.set("current_strategy", save_path)
+            self.config_manager.save()
 
             self.current_strategy_path = save_path
             self.strategy_path_entry.setText(save_path)
@@ -331,36 +318,26 @@ class App(QMainWindow):
         self.log("已创建新的空策略。请在保存时指定文件名。")
 
     def start_automation(self):
-        self.log("正在启动自动化引擎...")
         debug_mode = self.debug_checkbox.isChecked()
-        self.automation_process = AutomationEngine(
-            self.config_path, 
-            self.log_queue, 
-            self.yolo_data_queue, 
-            self.command_queue, 
-            debug_mode
-        )
-        self.automation_process.start()
-        self.start_button.setEnabled(False)
-        self.stop_button.setEnabled(True)
-        self.debug_checkbox.setEnabled(False)
+        if self.controller.start_engine(debug_mode):
+            self.start_button.setEnabled(False)
+            self.stop_button.setEnabled(True)
+            self.debug_checkbox.setEnabled(False)
 
     def stop_automation(self):
-        if self.automation_process and self.automation_process.is_alive():
-            self.log("正在停止自动化引擎...")
-            self.automation_process.terminate()
-            self.automation_process.join()
+        self.controller.stop_engine()
         self.start_button.setEnabled(True)
         self.stop_button.setEnabled(False)
         self.debug_checkbox.setEnabled(True)
 
     def log(self, message):
-        self.log_queue.put(message)
+        self.controller.log(message)
 
     def process_log_queue(self):
+        log_queue = self.controller.get_log_queue()
         try:
-            while not self.log_queue.empty():
-                message = self.log_queue.get_nowait()
+            while not log_queue.empty():
+                message = log_queue.get_nowait()
                 if isinstance(message, dict) and message.get("type") == "debug_step":
                     self.handle_debug_step(message)
                 else:
@@ -369,9 +346,10 @@ class App(QMainWindow):
             QTimer.singleShot(100, self.process_log_queue)
 
     def process_yolo_data_queue(self):
+        yolo_data_queue = self.controller.get_yolo_data_queue()
         try:
-            while not self.yolo_data_queue.empty():
-                labels = self.yolo_data_queue.get_nowait()
+            while not yolo_data_queue.empty():
+                labels = yolo_data_queue.get_nowait()
                 self.yolo_textbox.setText(", ".join(labels) or "无识别目标")
         finally:
             QTimer.singleShot(100, self.process_yolo_data_queue)
@@ -387,10 +365,11 @@ class App(QMainWindow):
         msg_box.button(QMessageBox.No).setText('跳过')
         reply = msg_box.exec()
 
+        command_queue = self.controller.get_command_queue()
         if reply == QMessageBox.Yes:
-            self.command_queue.put('execute')
+            command_queue.put('execute')
         else:
-            self.command_queue.put('skip')
+            command_queue.put('skip')
 
     def closeEvent(self, event):
         reply = QMessageBox.question(self, "退出", "您确定要退出吗？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)

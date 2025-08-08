@@ -1,6 +1,6 @@
 import time
 from pynput.keyboard import Controller, Key
-from src.keystroke_sender import AbstractKeystrokeSender
+from src.interfaces.keystroke_sender import AbstractKeystrokeSender
 
 class PynputSender(AbstractKeystrokeSender):
     """使用 pynput 实现的按键模拟器"""

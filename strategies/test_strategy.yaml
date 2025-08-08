@@ -1,0 +1,13 @@
+name: Test Strategy
+class: Mage
+spec: Frost
+description: A test strategy file.
+global_cooldown: 1.2
+bindings:
+  '1': 'frostbolt'
+aoe_priority:
+  - name: blizzard
+    key: '2'
+single_target_priority:
+  - name: frostbolt
+    key: '1'
