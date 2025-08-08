@@ -2,6 +2,7 @@
 
 import os
 import sys
+import datetime
 
 import yaml
 from PySide6.QtCore import Qt, QTimer
@@ -350,7 +351,9 @@ class App(QMainWindow):
         try:
             while not yolo_data_queue.empty():
                 labels = yolo_data_queue.get_nowait()
-                self.yolo_textbox.setText(", ".join(labels) or "无识别目标")
+                current_time = datetime.datetime.now().strftime("%H:%M:%S")
+                text_to_set = f'[{current_time}] {", ".join(labels) or "无识别目标"}'
+                self.yolo_textbox.setText(text_to_set)
         finally:
             QTimer.singleShot(100, self.process_yolo_data_queue)
 
