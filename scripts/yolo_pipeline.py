@@ -1,9 +1,11 @@
 import os
+import sys
 import subprocess
 import time
 import yaml
 from datetime import datetime
-from PIL import ImageGrab
+import mss
+import mss.tools
 
 class YOLOPipeline:
     def __init__(self, config_path="config.yaml"):
@@ -53,13 +55,20 @@ class YOLOPipeline:
             time.sleep(5)
             print("--- 开始截图 ---")
             count = 0
-            while True:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                filename = os.path.join(self.raw_data_dir, f"{timestamp}.png")
-                ImageGrab.grab().save(filename)
-                count += 1
-                print(f"({count}) 截图已保存: {filename}")
-                time.sleep(interval)
+            with mss.mss() as sct:
+                while True:
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                    filename = os.path.join(self.raw_data_dir, f"{timestamp}.png")
+
+                    # Grab the data from the primary monitor
+                    sct_img = sct.grab(sct.monitors[1])
+
+                    # Save to the picture file
+                    mss.tools.to_png(sct_img.rgb, sct_img.size, output=filename)
+
+                    count += 1
+                    print(f"({count}) 截图已保存: {filename}")
+                    time.sleep(interval)
         except KeyboardInterrupt:
             print("\n--- 截图已停止 ---")
         except Exception as e:
@@ -73,11 +82,22 @@ class YOLOPipeline:
             return
 
         try:
-            command = ["labelImg", os.path.abspath(self.raw_data_dir), os.path.abspath(self.classes_file)]
+            # Determine the path to the labelImg executable
+            python_executable_dir = os.path.dirname(sys.executable)
+            if sys.platform == "win32":
+                labelimg_executable = os.path.join(python_executable_dir, "Scripts", "labelImg.exe")
+            else:
+                labelimg_executable = os.path.join(python_executable_dir, "bin", "labelImg")
+
+            if not os.path.exists(labelimg_executable):
+                print(f"警告: 在 '{labelimg_executable}' 未找到 labelImg。将回退到在系统PATH中搜索。")
+                labelimg_executable = "labelImg"
+
+            command = [labelimg_executable, os.path.abspath(self.raw_data_dir), os.path.abspath(self.classes_file)]
             print(f"执行命令: {' '.join(command)}")
             subprocess.Popen(command)
         except FileNotFoundError:
-            print("错误: 无法找到 'labelImg' 命令。请确保已安装并配置在系统路径中。")
+            print("错误: 无法找到 'labelImg' 命令。请确保已通过 'pip install labelimg' 安装，并且它位于您的系统路径或虚拟环境的Scripts目录中。")
         except Exception as e:
             print(f"启动LabelImg时发生错误: {e}")
 

@@ -12,7 +12,7 @@ dependencies = [
     "Pillow",
     "ultralytics",
     "labelimg>=1.8.6",
-    "labelimg",
+    "mss",
     "urllib3<2.0",
     "PySide6",
 ]
