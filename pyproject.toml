@@ -2,17 +2,16 @@
 name = "wow-automation-assistant"
 version = "1.0.0"
 description = "A GUI-based automation tool for World of Warcraft using image recognition."
-requires-python = ">=3.11"
+requires-python = "==3.9.23"
 
 dependencies = [
-    "customtkinter",
     "PyYAML",
     "pynput",
     "opencv-python",
     "Pillow",
     "ultralytics",
-    "labelimg>=1.8.6",
-    "labelimg",
     "urllib3<2.0",
     "PySide6",
+    "pyqt5-qt5==5.15.2",
+    "labelimg>=1.8.6",
 ]

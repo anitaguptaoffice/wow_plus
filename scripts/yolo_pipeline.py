@@ -1,9 +1,11 @@
 import os
 import subprocess
 import time
-import yaml
 from datetime import datetime
+
+import yaml
 from PIL import ImageGrab
+
 
 class YOLOPipeline:
     def __init__(self, config_path="config.yaml"):
@@ -75,7 +77,9 @@ class YOLOPipeline:
         try:
             command = ["labelImg", os.path.abspath(self.raw_data_dir), os.path.abspath(self.classes_file)]
             print(f"执行命令: {' '.join(command)}")
-            subprocess.Popen(command)
+            print("LabelImg 已启动。请在标注完成后关闭窗口以继续...")
+            subprocess.run(command, check=False)
+            print("LabelImg 已关闭。")
         except FileNotFoundError:
             print("错误: 无法找到 'labelImg' 命令。请确保已安装并配置在系统路径中。")
         except Exception as e:
@@ -86,9 +90,9 @@ class YOLOPipeline:
         print("--- 准备启动训练流水线 ---")
         try:
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            command = ["python", os.path.join(script_dir, "train_yolo.py")]
+            command = ["uv", "run", os.path.join(script_dir, "train_yolo.py")]
             print(f"执行命令: {' '.join(command)}")
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, encoding='utf-8', errors='ignore')
             while True:
                 output = process.stdout.readline()
                 if output == "" and process.poll() is not None:
@@ -99,6 +103,7 @@ class YOLOPipeline:
             print(f"--- 训练脚本执行完毕，退出代码: {rc} ---")
         except Exception as e:
             print(f"启动训练时发生错误: {e}")
+
 
 def main_menu():
     """显示主菜单并处理用户输入"""
@@ -127,6 +132,7 @@ def main_menu():
             break
         else:
             print("无效输入，请输入1到4之间的数字。")
+
 
 if __name__ == "__main__":
     main_menu()
